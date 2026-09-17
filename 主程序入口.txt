@@ -1,0 +1,42 @@
+import os
+from src.preprocess import TextPreprocessor
+from src.classifier import ReviewClassifier
+from src.batch_processor import BatchProcessor
+from src.visualize import ReportVisualizer
+
+def main():
+    # 路径配置
+    DATA_PATH = "data/sample_reviews.csv"
+    OUTPUT_DIR = "output"
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    print("="*50)
+    print("中文评论文本分类与分析系统")
+    print("="*50)
+
+    # 1. 数据预处理
+    print("\n>>> 步骤1：数据预处理")
+    preprocessor = TextPreprocessor()
+    df = preprocessor.load_dataset(DATA_PATH)
+
+    # 2. 模型训练与对比
+    print("\n>>> 步骤2：多模型训练与效果对比")
+    classifier = ReviewClassifier()
+    model_results = classifier.train_and_evaluate(df)
+
+    # 3. 生成可视化报告
+    print("\n>>> 步骤3：生成可视化分析报告")
+    visualizer = ReportVisualizer()
+    visualizer.generate_report(df, model_results, OUTPUT_DIR)
+
+    # 4. 批量处理示例
+    # print("\n>>> 步骤4：批量文件处理")
+    # batch_processor = BatchProcessor(preprocessor, classifier)
+    # batch_processor.process_folder("data/batch_files", f"{OUTPUT_DIR}/batch_result.csv")
+
+    print("\n" + "="*50)
+    print("项目运行完成！所有结果已保存至 output 目录")
+    print("="*50)
+
+if __name__ == "__main__":
+    main()

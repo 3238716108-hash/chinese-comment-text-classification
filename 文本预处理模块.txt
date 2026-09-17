@@ -1,0 +1,51 @@
+import re
+import jieba
+import pandas as pd
+from typing import List
+
+class TextPreprocessor:
+    def __init__(self, stopwords: List[str] = None):
+        # 默认基础停用词，可自行扩展
+        self.stopwords = stopwords if stopwords else [
+            "的", "了", "是", "我", "有", "和", "就", "不", "人", "都",
+            "一", "一个", "上", "也", "很", "到", "说", "要", "去", "你",
+            "会", "着", "没有", "看", "好", "自己", "这"
+        ]
+        jieba.setLogLevel(20)
+
+    def clean_text(self, text: str) -> str:
+        """清洗文本：去特殊符号、去空格、统一小写"""
+        text = str(text)
+        text = re.sub(r"[^\u4e00-\u9fa5a-zA-Z0-9]", " ", text)
+        text = text.strip().lower()
+        return text
+
+    def tokenize(self, text: str) -> str:
+        """分词+去停用词"""
+        words = jieba.lcut(self.clean_text(text))
+        words = [w for w in words if w not in self.stopwords and len(w) > 1]
+        return " ".join(words)
+
+    def load_dataset(self, file_path: str) -> pd.DataFrame:
+        """加载并校验数据集，返回清洗后的DataFrame"""
+        df = pd.read_csv(file_path)
+        # 校验必填字段
+        if "comment" not in df.columns or "label" not in df.columns:
+            raise ValueError("数据集必须包含 comment(评论文本) 和 label(标签) 列")
+        
+        # 去重、空值过滤
+        df = df.drop_duplicates(subset=["comment"]).dropna(subset=["comment", "label"])
+        # 文本分词预处理
+        df["text_clean"] = df["comment"].apply(self.tokenize)
+        
+        # 数据质量校验
+        total = len(df)
+        print(f"[数据预处理] 有效数据量：{total} 条")
+        print(f"[数据预处理] 标签分布：\n{df['label'].value_counts()}")
+        return df
+
+    def build_dataset(self, input_path: str, output_path: str):
+        """构建标准化数据集并导出"""
+        df = self.load_dataset(input_path)
+        df.to_csv(output_path, index=False, encoding="utf-8-sig")
+        print(f"[数据集构建] 标准化数据集已保存至 {output_path}")

@@ -1,0 +1,53 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+from wordcloud import WordCloud
+
+plt.rcParams["font.sans-serif"] = ["SimHei"]
+plt.rcParams["axes.unicode_minus"] = False
+
+class ReportVisualizer:
+    def generate_report(self, df: pd.DataFrame, model_results: dict, output_dir: str):
+        """生成完整可视化分析报告"""
+        fig = plt.figure(figsize=(16, 12))
+
+        # 1. 标签分布饼图
+        ax1 = plt.subplot(2, 2, 1)
+        label_counts = df["label"].value_counts()
+        ax1.pie(label_counts.values, labels=label_counts.index, autopct="%1.1f%%")
+        ax1.set_title("评论情感标签分布")
+
+        # 2. 模型效果对比柱状图
+        ax2 = plt.subplot(2, 2, 2)
+        models = list(model_results.keys())
+        accs = [v["accuracy"] for v in model_results.values()]
+        f1s = [v["f1"] for v in model_results.values()]
+        x = range(len(models))
+        ax2.bar([i-0.2 for i in x], accs, width=0.4, label="准确率")
+        ax2.bar([i+0.2 for i in x], f1s, width=0.4, label="F1值")
+        ax2.set_xticks(x)
+        ax2.set_xticklabels(models)
+        ax2.set_title("多模型效果对比")
+        ax2.legend()
+        ax2.set_ylim(0.5, 1.0)
+
+        # 3. 评论文本长度分布
+        ax3 = plt.subplot(2, 2, 3)
+        df["text_len"] = df["text_clean"].apply(lambda x: len(x.split()))
+        sns.histplot(df["text_len"], bins=30, ax=ax3, kde=True)
+        ax3.set_title("评论文本长度分布")
+        ax3.set_xlabel("词语数量")
+
+        # 4. 高频词云
+        ax4 = plt.subplot(2, 2, 4)
+        all_text = " ".join(df["text_clean"].tolist())
+        wc = WordCloud(font_path="simhei.ttf", background_color="white", width=800, height=400).generate(all_text)
+        ax4.imshow(wc)
+        ax4.axis("off")
+        ax4.set_title("评论高频词云")
+
+        plt.tight_layout()
+        save_path = f"{output_dir}/analysis_report.png"
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"[可视化报告] 已保存至 {save_path}")
+        plt.close()

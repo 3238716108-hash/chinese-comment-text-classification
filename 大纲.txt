@@ -1,0 +1,12 @@
+chinese-review-classification
+├── data/                  # 数据集目录
+│   └── sample_reviews.csv # 示例标注数据
+├── src/
+│   ├── preprocess.py      # 文本预处理与数据清洗
+│   ├── classifier.py      # 多分类模型训练与对比
+│   ├── batch_processor.py # 批量自动化处理工具
+│   └── visualize.py       # 可视化分析报告生成
+├── output/                # 结果输出目录
+├── main.py                # 项目主入口
+├── requirements.txt       # 依赖包清单
+└── README.md              # 项目说明文档
